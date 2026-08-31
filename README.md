@@ -1,4 +1,4 @@
-**Simple Barcode Scanner With Sample Data.*
+**Simple Barcode Scanner With Sample Data.**
 <br/>
 **Has Unhandled Errors.**
 <br/>
