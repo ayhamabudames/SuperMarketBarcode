@@ -1,0 +1,62 @@
+![HartUI Banner (HartUI controls are shown in the window)](https://i.imgur.com/1aRHK20.jpeg)
+
+# ![hartui logo](https://i.imgur.com/JSIdg8m.png)HartUI
+
+A completely Free Winforms UI Library based on the now-archived [`CuoreUI.Winforms`](https://github.com/owtysm2/CuoreUI).
+
+> [!TIP]
+> Don't be afraid to report problems or suggest new controls and components on the [![GitHub](https://i.imgur.com/rJ9l299.png) Issues](https://github.com/rrivvi/HartUI/issues) page!
+
+---
+
+# ![cui-32x](https://i.imgur.com/f84tWbH.png)Migrating from CuoreUI?
+
+> [!CAUTION]
+> HartUI is based on **CuoreUI.Winforms**. However, some of HartUI's public API and control behaviours are different from the original. Consider staying on CuoreUI in your old projects, unless you need the changes introduced by HartUI.
+
+**If you want to migrate, check out [Migrating from CuoreUI](./.github/migrating-from-cuoreui.md)**
+
+# 🔧 Installation
+
+### ![NuGet logo](https://i.imgur.com/6aPyVAg.png) NuGet
+
+The official NuGet package is [**HartUI.Winforms** ](https://www.nuget.org/packages/HartUI.Winforms).
+
+> [!TIP]
+> Package Manager Console:
+>
+> ```powershell
+> Install-Package HartUI.Winforms
+> ```
+
+### 📦 Add to the Toolbox
+
+Follow the step-by-step guide:
+
+> ![GitHub logo](https://i.imgur.com/rJ9l299.png) [Load HartUI.dll from the Toolbox](./.github/load-into-toolbox.md)
+
+---
+
+# 📜 Documentation
+Read the Documentation: [hartui.netlify.app/docs/](https://hartui.netlify.app/docs/)
+
+> [!NOTE]
+> The documentation only mentions the most important properties of each control, component, and public helper. 
+
+---
+
+# 📅 Versioning
+
+We use CalVer.
+
+For more information, see:
+
+> ![GitHub logo](https://i.imgur.com/rJ9l299.png) [/.github/versioning.md](https://github.com/rrivvi/HartUI/blob/master/.github/versioning.md)
+
+---
+
+## Credits
+
+> ![Microsoft logo](https://i.imgur.com/Wbos3r0.png) [Fluent Icons](https://github.com/microsoft/fluentui-system-icons) — ([![License: MIT License](https://img.shields.io/badge/MIT-License-006aff)](https://mit-license.org/) @ https://mit-license.org)
+
+> ![CuoreUI logo](https://i.imgur.com/5CIQsYB.png) [CuoreUI](https://github.com/owtysm2/CuoreUI) — ([![License: Unlicense](https://img.shields.io/badge/Unlicense-License-ff6aff)](https://unlicense.org) @ https://unlicense.org)

@@ -1,0 +1,90 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Barcode
+{
+    public partial class Form1 : Form
+    {
+        private List<Product> _ProductsList = new List<Product>
+        {
+            new Product("مايونيز", "735850063942", 0.6f) ,
+            new Product("رزس تايجر", "705632085943", 3.5f),
+            new Product("شامبو ضد القشرة", "035000530325", 1.75f),
+            new Product("شامبو ضد القشرة", "035000530325", 1.75f)
+
+        };
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private bool _IsValidExtension(string FileName)
+        {
+            string[] ValidExtensions = { "jpeg", "jpg", "png" };
+            var FileExtension = Path.GetExtension(FileName);
+
+            foreach (string ext in ValidExtensions)
+            {
+                if (FileExtension == ('.' + ext))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
+        private void _ShowProductInfo(string  ProductCode)
+        {
+            Product product = null;
+            foreach(var  p in _ProductsList)
+            {
+                if(p.Code == ProductCode)
+                {
+                    product = p;
+                    break;
+                }
+            }
+            if(product == null) {  return;}
+
+            lblName.Text = product.Name;
+            lblName.Text = product.Price.ToString();
+        }
+        private void cuiFileDropper1_FileDropped(object sender, HartUI.Controls.FileDroppedEventArgs e)
+        {
+
+            string PicturePath = e.FileName;
+            //check the file extension
+            if (!_IsValidExtension(PicturePath))
+            {
+                MessageBox.Show("Invalid file type [only jpeg and png are allowed]", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            pbBarcode.ImageLocation = PicturePath;
+            //read barcode
+            ZXing.BarcodeReader reader = new ZXing.BarcodeReader();
+            var result = reader.Decode((Bitmap)pbBarcode.Image);
+            if (result == null)
+            {
+
+                MessageBox.Show("No info barcode");
+                return;
+            }
+            lblCode.Text = result.ToString();
+        }
+
+        private void lblCode_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(lblCode.Text);
+            MessageBox.Show("Code Coppied Successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+    }
+}

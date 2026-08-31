@@ -1,0 +1,179 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using AForge.Video;
+using AForge.Video.DirectShow;
+namespace Barcode
+{
+    public partial class frmMain : Form
+    {
+        private List<Product> _ProductsList = new List<Product>
+        {
+            new Product("مايونيز", "735850063942", 0.6f,"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRau53HxJYRcyAn1FEul034QN96dYWCvnXtzV7Y9SfZmMofLkFJDyduLZz-&s=10") ,
+            new Product("رز تايجر", "705632085943", 3.5f , "https://pbs.twimg.com/profile_images/904965235102101504/keSMfF2f_400x400.jpg"),
+            new Product("شامبو ضد القشرة", "035000530325", 1.75f , "https://cdn.salla.sa/DGdDlG/8075a053-7805-48bd-aa6f-e1532ceb5d7a-1000x1000-UmyHg0UY9zBywPSvS9MFRSLx5dYnfK6E5XROXBPP.jpg"),
+        };
+        FilterInfoCollection filterInfoCollection;
+        VideoCaptureDevice videoCaptureDevice;
+        public frmMain()
+        {
+            InitializeComponent();
+        }
+
+        private bool _IsValidExtension(string FileName)
+        {
+            string[] ValidExtensions = { "jpeg", "jpg", "png" };
+            var FileExtension = Path.GetExtension(FileName);
+
+            foreach (string ext in ValidExtensions)
+            {
+                if (FileExtension == ('.' + ext))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void _ShowProductInfo(string ProductCode)
+        {
+            Product product = null;
+            foreach (var p in _ProductsList)
+            {
+                if (p.Code == ProductCode)
+                {
+                    product = p;
+                    break;
+                }
+            }
+            if (product == null) { return; }
+
+            lblName.Text = product.Name;
+            lblPrice.Text = product.Price.ToString() + "$";
+            pbProductImage.LoadAsync(product.ImageUrl);
+        }
+        private void cuiFileDropper1_FileDropped(object sender, HartUI.Controls.FileDroppedEventArgs e)
+        {
+            if (!rbtnUseCamera.Checked)
+            {
+                string PicturePath = e.FileName;
+                //check the file extension
+                if (!_IsValidExtension(PicturePath))
+                {
+                    MessageBox.Show("Invalid file type [only jpeg and png are allowed]", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                pbBarcode.Image = Image.FromFile(PicturePath);
+            }
+
+            //read barcode
+            ZXing.BarcodeReader reader = new ZXing.BarcodeReader();
+            var result = reader.Decode((Bitmap)pbBarcode.Image);
+            if (result == null)
+            {
+                if (!rbtnUseCamera.Checked)
+                {
+
+                    MessageBox.Show("No info barcode");
+                }
+                return;
+            }
+            lblCode.Text = result.ToString();
+            _ShowProductInfo(result.ToString());
+        }
+
+        private void lblCode_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(lblCode.Text);
+            MessageBox.Show("Code Coppied Successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void rbtnAllInfo_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!rbtnAllInfo.Checked)
+            {
+                lblTitleName.Visible = false;
+                lblTitlePrice.Visible = false;
+                lblName.Visible = false;
+                lblPrice.Visible = false;
+            }
+            else
+            {
+                lblTitleName.Visible = true;
+                lblTitlePrice.Visible = true;
+                lblName.Visible = true;
+                lblPrice.Visible = true;
+            }
+
+        }
+
+        private void frmMain_Load(object sender, EventArgs e)
+        {
+            //add cams to 
+            filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            foreach (var i in cbCameras.Items)
+            {
+                cbCameras.RemoveItem(i);
+            }
+            foreach (FilterInfo f in filterInfoCollection)
+            {
+                cbCameras.AddItem(f.Name);
+
+                cbCameras.SelectedIndex = 0;
+                videoCaptureDevice = new VideoCaptureDevice();
+            }
+        }
+
+        private void rbtnUseCamera_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbtnUseCamera.Checked)
+            {
+                cbCameras.Visible = true;
+                videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cbCameras.SelectedIndex].MonikerString);
+                videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+                videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame1;
+                videoCaptureDevice.Start();
+            }
+            else
+            {
+                pbBarcode.Image = Properties.Resources._8401_white_tree;
+                cbCameras.Visible = false;
+            }
+        }
+
+        private void VideoCaptureDevice_NewFrame1(object sender, NewFrameEventArgs eventArgs)
+        {
+            Thread.Sleep(5);
+            //cuiFileDropper1_FileDropped(null, null);
+
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+            Bitmap bitmap2 = (Bitmap)eventArgs.Frame.Clone();
+            pbBarcode.Image = bitmap;
+
+            ZXing.BarcodeReader reader = new ZXing.BarcodeReader();
+            var result = reader.Decode(bitmap2);
+            if (result != null)
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    lblCode.Text = result.ToString();
+                    _ShowProductInfo(result.ToString());
+                });
+            }
+            
+        }
+    }
+}

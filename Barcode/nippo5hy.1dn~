@@ -1,0 +1,171 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using AForge.Video;
+using AForge.Video.DirectShow;
+namespace Barcode
+{
+    public partial class frmMain : Form
+    {
+        private List<Product> _ProductsList = new List<Product>
+        {
+            new Product("مايونيز", "735850063942", 0.6f) ,
+            new Product("رزس تايجر", "705632085943", 3.5f),
+            new Product("شامبو ضد القشرة", "035000530325", 1.75f),
+            new Product("شامبو ضد القشرة", "035000530325", 1.75f)
+
+        };
+        FilterInfoCollection filterInfoCollection;
+        VideoCaptureDevice videoCaptureDevice;
+        public frmMain()
+        {
+            InitializeComponent();
+        }
+
+        private bool _IsValidExtension(string FileName)
+        {
+            string[] ValidExtensions = { "jpeg", "jpg", "png" };
+            var FileExtension = Path.GetExtension(FileName);
+
+            foreach (string ext in ValidExtensions)
+            {
+                if (FileExtension == ('.' + ext))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void _ShowProductInfo(string ProductCode)
+        {
+            Product product = null;
+            foreach (var p in _ProductsList)
+            {
+                if (p.Code == ProductCode)
+                {
+                    product = p;
+                    break;
+                }
+            }
+            if (product == null) { return; }
+
+            lblName.Text = product.Name;
+            lblPrice.Text = product.Price.ToString() + "$";
+        }
+        private void cuiFileDropper1_FileDropped(object sender, HartUI.Controls.FileDroppedEventArgs e)
+        {
+            if (!rbtnUseCamera.Checked)
+            {
+                string PicturePath = e.FileName;
+                //check the file extension
+                if (!_IsValidExtension(PicturePath))
+                {
+                    MessageBox.Show("Invalid file type [only jpeg and png are allowed]", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                pbBarcode.Image = Image.FromFile(PicturePath);
+            }
+
+            //read barcode
+            ZXing.BarcodeReader reader = new ZXing.BarcodeReader();
+            var result = reader.Decode((Bitmap)pbBarcode.Image);
+            if (result == null)
+            {
+                if (!rbtnUseCamera.Checked)
+                {
+
+                    MessageBox.Show("No info barcode");
+                }
+                return;
+            }
+            lblCode.Text = result.ToString();
+            _ShowProductInfo(result.ToString());
+        }
+
+        private void lblCode_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(lblCode.Text);
+            MessageBox.Show("Code Coppied Successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void rbtnAllInfo_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!rbtnAllInfo.Checked)
+            {
+                lblTitleName.Visible = false;
+                lblTitlePrice.Visible = false;
+                lblName.Visible = false;
+                lblPrice.Visible = false;
+            }
+            else
+            {
+                lblTitleName.Visible = true;
+                lblTitlePrice.Visible = true;
+                lblName.Visible = true;
+                lblPrice.Visible = true;
+            }
+
+        }
+
+        private void frmMain_Load(object sender, EventArgs e)
+        {
+            //add cams to 
+            filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            foreach (var i in cbCameras.Items)
+            {
+                cbCameras.RemoveItem(i);
+            }
+            foreach (FilterInfo f in filterInfoCollection)
+            {
+                cbCameras.AddItem(f.Name);
+
+                cbCameras.SelectedIndex = 0;
+                videoCaptureDevice = new VideoCaptureDevice();
+            }
+        }
+
+        private void rbtnUseCamera_CheckedChanged(object sender, EventArgs e)
+        {
+            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cbCameras.SelectedIndex].MonikerString);
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame;
+            videoCaptureDevice.NewFrame += VideoCaptureDevice_NewFrame1;
+            videoCaptureDevice.Start();
+        }
+
+        private void VideoCaptureDevice_NewFrame1(object sender, NewFrameEventArgs eventArgs)
+        {
+            Thread.Sleep(100);
+            cuiFileDropper1_FileDropped(null, null);
+
+        }
+
+        private void VideoCaptureDevice_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            pbBarcode.Image = (Bitmap)eventArgs.Frame.Clone();
+            
+            ZXing.BarcodeReader reader = new ZXing.BarcodeReader();
+            var result = reader.Decode((Bitmap)pbBarcode.Image);
+            if (result == null)
+            {
+                if (!rbtnUseCamera.Checked)
+                {
+
+                    MessageBox.Show("No info barcode");
+                }
+                return;
+            }
+            lblCode.Text = result.ToString();
+            _ShowProductInfo(result.ToString());
+        }
+    }
+}
